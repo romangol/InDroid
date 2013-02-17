@@ -31,6 +31,8 @@
 
 #if defined(LOCCS_DIAOS)
 #include "indroid/Probe.h"
+#include "indroid/tracer/OpcodeTracer.h"
+#include "indroid/tracer/RegTracer.h"
 #endif
 
 /*
@@ -1963,6 +1965,13 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 
     // Call the interpreter
     (*stdInterp)(self);
+
+#if defined(LOCCS_DIAOS)
+	extern gossip_loccs::OpcodeTracer opcodeTracer;
+	extern gossip_loccs::RegTracer regTracer;
+	opcodeTracer.flush_traceFile();
+	regTracer.flush_traceFile();
+#endif
 
     *pResult = self->interpSave.retval;
 

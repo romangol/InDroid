@@ -188,6 +188,7 @@ LOCAL_SRC_FILES := \
 	indroid/filter/Filter.cpp \
 	indroid/tracer/Tracer.cpp \
 	indroid/tracer/OpcodeTracer.cpp \
+	indroid/tracer/RegTracer.cpp \
 	indroid/Probe.cpp
 
 # TODO: this is the wrong test, but what's the right one?

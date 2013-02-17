@@ -42,17 +42,26 @@ namespace gossip_loccs
 	const static u4	StrMaxLen			= 1024;
 	const static u4	RegBufMaxLen		= 1024;
 
+enum RegOpType
+{
+	READ,
+	WRITE,
+	READ_INT,
+	WRITE_INT,
+	READ_OBJ,
+	WRITE_OBJ,
+	READ_WIDE,
+	WRITE_WIDE,
+	READ_FLOAT,
+	WRITE_FLOAT,
+	READ_DOUBLE,
+	WRITE_DOUBLE
+};
+
 struct RegRecord
 {
 	u1 index[8];
 	u4 buf[6];
-};
-
-struct InstRecord
-{
-	u4 threadId;
-	u4 pc;
-	u4 uid;
 };
 
 struct OpcodeRecord

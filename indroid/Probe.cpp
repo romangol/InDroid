@@ -1,5 +1,6 @@
 #include "indroid/Probe.h"
 #include "indroid/tracer/OpcodeTracer.h"
+#include "indroid/tracer/RegTracer.h"
 #include "indroid/filter/Filter.h"
 #include "indroid/utils/Utilproc.h"
 
@@ -7,13 +8,14 @@ using namespace std;
 using namespace gossip_loccs;
 
 // init a uidmap via util class firstly
-static UtilProc util;
+UtilProc util;
 
 // init a filter for class name and method name filtering
-static Filter filter;
+Filter filter;
 
-// init a tracer to record runtime data.
-static OpcodeTracer opcodeTracer;
+// init tracers to record runtime data.
+OpcodeTracer opcodeTracer;
+RegTracer regTracer;
 
 // define YWB message output macro
 #define DIAOS_DBG 1
@@ -22,6 +24,8 @@ static OpcodeTracer opcodeTracer;
 #else
 # define GOSSIP(...) (void(0)) 
 #endif
+
+static bool traceFlag = false;
 
 void diaos_monitor_mov( const u2 * const pc, const u4 * const fp, const Thread * const self )
 {
@@ -60,6 +64,7 @@ bool diaos_init()
 
 	filter.init( util.get_apk_dir() );
 	status &= opcodeTracer.init( util.get_apk_dir() );
+	status &= regTracer.init( util.get_apk_dir() );
 
 	return status;
 }
@@ -67,31 +72,31 @@ bool diaos_init()
 void diaos_monitor_opcode ( const u2 * const pc, const u4 * const fp, const Thread * const self )
 {
 	if ( filter.class_should_be_traced( self->interpSave.method->clazz->descriptor ) )   
+	{
+		// set traceFlag once for a single opcode, so that in monitor_reg() the filter should not be invoked.
+		traceFlag = true;
 		opcodeTracer.record_opcode( pc, self->threadId, self->interpSave.method );
+	}
+	else
+		traceFlag = false;
 }
+
+void diaos_monitor_reg( RegOpType type, const u4 * const fp, u2 index )
+{
+	if ( traceFlag ) 
+		regTracer.record_reg( type, fp, index, opcodeTracer.get_instUid() );
+}
+
 
 #if 0
-void diaos_monitor_object( const Method * const m, const Object * const obj )
-{
-	if ( filter.class_should_be_traced( m->clazz->descriptor ) )   
-		tracer.extract_str(obj);
-}
-
-void diaos_monitor_reg_read( const Method * const m, u2 index, u4 value )
-{
-	if ( filter.class_should_be_traced( m->clazz->descriptor ) )   
-		tracer.record_reg_read( index, value );
-}
-
-void diaos_monitor_reg_write( const Method * const m, u2 index, u4 value )
-{
-	if ( filter.class_should_be_traced( m->clazz->descriptor ) )   
-		tracer.record_reg_write( index, value );
-}
-
 void diaos_monitor_func_call( const Method * const m )
 {
-	if ( filter.class_should_be_traced ( m->clazz->descriptor ) )
+	if ( traceFlag )   
 		tracer.record_func_call( m );
+}
+void diaos_monitor_object( const Method * const m, const Object * const obj )
+{
+	if ( traceFlag )   
+		tracer.extract_str(obj);
 }
 #endif

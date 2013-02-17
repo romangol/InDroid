@@ -2,7 +2,6 @@
 #define _DIAOS_OPCODE_TRACER_H_
 
 #include <string>
-#include <vector>
 #include <map>
 
 #include "Dalvik.h"
@@ -14,6 +13,11 @@
 namespace gossip_loccs
 {
 
+struct Insts
+{
+	u2 in[InstNum];
+};
+
 class OpcodeTracer : public Tracer
 {
 public:
@@ -23,11 +27,13 @@ public:
 	u4 get_instUid		();
 
 private:
+	void save_opcode_pool();
 	bool init_traceFile	();
+	std::string tracePoolFileName_;
 
 	u4								instUid_;
 	std::map<u4, std::string>		methodPool_;
-	std::map<u4, std::vector<u2> >	opcodePool_; 
+	std::map<u4, Insts>	opcodePool_; 
 };
 
 

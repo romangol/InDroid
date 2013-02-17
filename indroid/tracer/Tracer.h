@@ -5,7 +5,6 @@
 #include <set>
 #include <string>
 
-#include "indroid/Monitor.h"
 #include "indroid/Constant.h"
 
 namespace gossip_loccs
@@ -14,8 +13,9 @@ namespace gossip_loccs
 class Tracer
 {
 public:
-	~Tracer				();
-	bool init_traceFile	();
+	~Tracer					();
+	bool init_traceFile		();
+	void flush_traceFile	();
 
 protected:
 	std::string		apkDir_;

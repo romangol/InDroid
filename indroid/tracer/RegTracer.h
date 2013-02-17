@@ -8,6 +8,7 @@
 #include "mterp/Mterp.h"
 
 #include "indroid/tracer/Tracer.h"
+#include "indroid/Constant.h"
 
 namespace gossip_loccs
 {
@@ -15,10 +16,9 @@ namespace gossip_loccs
 class RegTracer : public Tracer
 {
 public:
-	~RegTracer				();
-	bool init				( const std::string & apkDir );
-	void record_reg_read	( u2 index, u4 value );
-	void record_reg_write	( u2 index, u4 value );
+	~RegTracer			();
+	bool init			( const std::string & apkDir );
+	void record_reg		( RegOpType type, const u4 * const fp, u2 index, u4 instUid );
 
 private:
 	bool init_traceFile	();

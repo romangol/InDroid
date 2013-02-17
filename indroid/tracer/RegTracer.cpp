@@ -1,12 +1,9 @@
 #include "indroid/tracer/RegTracer.h"
 
 #include <cstdio>
-#include <ctime>
 #include <fstream>
+#include <map>
 
-//#include <sys/stat.h>
-//#include <sys/types.h>
-//#include <signal.h>
 
 // define YWB message output macro
 #define DIAOS_DBG 1
@@ -23,6 +20,9 @@ using std::ifstream;
 	
 namespace gossip_loccs
 {
+	static const u2 READ_TYPE = 0x10;
+	static const u2 WRITE_TYPE = 0x09;
+	
 	RegTracer::~RegTracer()
 	{
 	}
@@ -38,14 +38,21 @@ namespace gossip_loccs
 		return Tracer::init_traceFile();
 	}
 	
-	void RegTracer::record_reg_read	( u2 index, u4 value )
+	void RegTracer::record_reg ( RegOpType type, const u4 * const fp, u2 index, u4 instUid )
 	{
-		
-	}
+		if ( fwrite( &type, sizeof(type), 1, traceFile_ ) != 1 )
+			GOSSIP( "RegTracer record type failed\n");
 
-	void RegTracer::record_reg_write	( u2 index, u4 value )
-	{
-		
+		if ( fwrite( &instUid, sizeof(u4), 1, traceFile_ ) != 1 )
+			GOSSIP( "RegTracer record instUid failed\n");
+
+		/*
+		if ( fwrite( &index, sizeof(u2), 1, traceFile_ ) != 1 )
+			GOSSIP( "RegTracer record index failed\n");
+		if ( fwrite( &value, sizeof(u4), 1, traceFile_ ) != 1 )
+			GOSSIP( "RegTracer record value failed\n");
+		*/
+
 	}
 
 }; // end of namespace gossip_loccs

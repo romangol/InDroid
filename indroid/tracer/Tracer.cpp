@@ -44,5 +44,9 @@ using std::ifstream;
 		return true;
 	}
 	
+	void Tracer::flush_traceFile() 
+	{
+		fflush( traceFile_ );
+	}
 }; // end of namespace gossip_loccs
 

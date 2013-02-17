@@ -30,6 +30,7 @@
 
 #ifdef LOCCS_DIAOS
 #include "indroid/Probe.h"
+using gossip_loccs::RegOpType;
 #endif
 
 /*
@@ -227,7 +228,102 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  *
  * "_idx" may be referenced more than once.
  */
-#ifdef CHECK_REGISTER_INDICES
+
+#if defined (LOCCS_DIAOS)
+using namespace gossip_loccs;
+
+static RegOpType regType; 
+
+inline u4 get_reg( const u4 * const fp, size_t index )
+{
+	diaos_monitor_reg ( regType = READ, fp, index );
+	return fp[index]; 
+}
+
+inline Object* get_reg_as_obj( const u4 * const fp, size_t index )
+{
+	diaos_monitor_reg ( regType = READ_OBJ, fp, index );
+	Object * o = reinterpret_cast<Object *> (fp[index]);
+
+	//tracer.monitor_obj(o);
+
+	return o; 
+}
+
+inline s4 get_reg_int( const u4 * const fp, size_t index )
+{
+	diaos_monitor_reg ( regType = READ_INT, fp, index );
+	return static_cast<s4>( fp[index] ); 
+}
+
+inline float get_reg_float( const u4 * const fp, size_t index )
+{
+	diaos_monitor_reg ( regType = READ_FLOAT, fp, index);
+	return *( (float*) &fp[index] );
+}
+
+inline s8 get_reg_wide( const u4 * const fp, size_t index )
+{
+	diaos_monitor_reg ( regType = READ_WIDE, fp, index);
+	return getLongFromArray(fp, index); 
+}
+
+inline double get_reg_double( const u4 * const fp, size_t index )
+{
+	diaos_monitor_reg ( regType = READ_DOUBLE, fp, index);
+	return getDoubleFromArray (fp, index); 
+}
+
+inline void set_reg( u4 * const fp, size_t index, u4 val )
+{
+	fp[index] = val; 
+	diaos_monitor_reg ( regType = WRITE, fp, index);
+}
+
+inline void set_reg_as_obj( u4 * const fp, size_t index, const Object * const val )
+{
+	fp[index] = reinterpret_cast<u4>(val); 
+	diaos_monitor_reg ( regType = WRITE_OBJ, fp, index);
+}
+
+inline void set_reg_int( u4 * const fp, size_t index, s4 val )
+{
+	fp[index] = val; 
+	diaos_monitor_reg ( regType = WRITE_INT, fp, index);
+}
+
+inline void set_reg_float( u4 * const fp, size_t index, float val )
+{
+	*((float*) &fp[index]) = val;
+	diaos_monitor_reg ( regType = WRITE_FLOAT, fp, index );
+}
+
+inline void set_reg_wide( u4 * const fp, size_t index, s8 val )
+{
+	putLongToArray (fp, index, val);
+	diaos_monitor_reg ( regType = WRITE_WIDE, fp, index);
+}
+
+inline void set_reg_double( u4 * const fp, size_t index, double val )
+{
+	putDoubleToArray(fp, index, val );
+	diaos_monitor_reg ( regType = WRITE_DOUBLE, fp, index);
+}
+
+# define GET_REGISTER(_idx)                 get_reg( fp, (_idx) ) 
+# define GET_REGISTER_AS_OBJECT(_idx)       get_reg_as_obj( fp, (_idx) ) 
+# define GET_REGISTER_INT(_idx)             get_reg_int( fp, (_idx) )
+# define GET_REGISTER_WIDE(_idx)            get_reg_wide(  fp, (_idx) )
+# define GET_REGISTER_FLOAT(_idx)           get_reg_float( fp, (_idx) )
+# define GET_REGISTER_DOUBLE(_idx)          get_reg_double( fp, (_idx) )
+# define SET_REGISTER(_idx, _val)           set_reg( fp, (_idx), (_val) )
+# define SET_REGISTER_AS_OBJECT(_idx, _val) set_reg_as_obj( fp, (_idx), (_val) )
+# define SET_REGISTER_INT(_idx, _val)       set_reg_int( fp, (_idx), (_val) )
+# define SET_REGISTER_WIDE(_idx, _val)      set_reg_wide( fp, (_idx), (_val) )
+# define SET_REGISTER_FLOAT(_idx, _val)     set_reg_float( fp, (_idx), (_val) )
+# define SET_REGISTER_DOUBLE(_idx, _val)    set_reg_double( fp, (_idx), (_val) )
+
+#elif defined (CHECK_REGISTER_INDICES)
 # define GET_REGISTER(_idx) \
     ( (_idx) < curMethod->registersSize ? \
         (fp[(_idx)]) : (assert(!"bad reg"),1969) )
