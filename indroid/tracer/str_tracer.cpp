@@ -22,50 +22,6 @@ using std::ifstream;
 	
 namespace gossip_loccs
 {
-
-	bool Tracer::init( const string & apkDir ) 
-	{
-		instUid_ = 0;
-		recordFlag_ = 0;
-		apkDir_ = apkDir;
-
-		char opcodeRecordFilename[MaxLineLen] = {0};
-		char funcsRecordFilename[MaxLineLen] = {0};
-	    char objRecordFilename[MaxLineLen] = {0};
-	
-		// get opcodes.bin path
-		snprintf ( opcodeRecordFilename, MaxLineLen, "%s/opcodes_%d.bin", apkDir_.c_str(), getpid() );
-		// get funcs.bin path
-		snprintf ( funcsRecordFilename, MaxLineLen, "%s/funcs_%d.bin", apkDir_.c_str(), getpid() );
-		// get objs.bin path
-		snprintf ( objRecordFilename, MaxLineLen, "%s/objs_%d.bin", apkDir_.c_str(), getpid() );
-	
-		// init record file for Tracer
-		// should not use append mode, because tracer is a single static class instance.
-		fpOpcode_ = fopen ( opcodeRecordFilename, "wb" );
-		fpFuncs_ = fopen ( funcsRecordFilename, "wb" );
-		fpObj_ = fopen ( objRecordFilename, "wb" );
-
-		if ( fpOpcode_ == NULL || fpFuncs_ == NULL || fpObj_ == NULL )
-		{
-			GOSSIP( "open record file error!\n" );
-			return false;
-			// dvmAbort(); // harsh!!!
-		}
-		return true;
-	}
-
-	Tracer::~Tracer()
-	{
-		// tracer destructs only when process ends.
-		fclose ( fpOpcode_ );
-		fclose ( fpFuncs_ );
-		fclose ( fpObj_ );
-		GOSSIP( "CLOSE record file\n" );
-	}
-	
-	
-
 	bool Tracer::init_recordFlag()
 	{
 		// get flag.dlist path
@@ -90,65 +46,6 @@ namespace gossip_loccs
 
 	}
 
-	void Tracer::record_opcode( u4 threadId, const Method* curMethod, const u2* pc, const u4 (&regTable)[RegMaxNum] )
-	{
-		if ( !(recordFlag_ & 0x08) )
-		{
-			this->instUid_++;
-			return ;
-		}
-		static InstRecord r;
-
-		/* record opcode contents */ 
-	    r.threadId = threadId ;
-	    r.pc = (uint32_t) (pc);
-	
-		/* must use assignment operation!!! */
-	    for ( size_t i = 0; i < InstNum; ++i )
-			r.inst[i] = pc[i];
-
-		// store name's hash instead of strings
-		r.classNameHash = BKDRHash( curMethod->clazz->descriptor );
-		r.methodNameHash = BKDRHash( curMethod->name );
-
-		r.uid = this->instUid_++;
-
-		// reg's value is variable, thus we use a specific func to deal with.
-		Tracer::reg_table_to_Buff ( regTable, r.buff );
-
-		// write one Struct each time.
-		if ( fwrite( &r, sizeof(InstRecord), 1, fpOpcode_ ) != 1 )
-		{
-			GOSSIP( "write opcodes.bin error\n" );
-		}
-		
-		fflush( fpOpcode_);
-	}
-
-
-	void Tracer::record_func_call( const Method* curMethod )
-	{
-		/*
-		if ( !(recordFlag & 0x04) )
-			return ;
-		*/
-		static const unsigned char splitter[] = ", ";
-		static const unsigned char file_end[] = " \n"; 
-		//instruction id
-		fprintf( fpFuncs_, "instUid %u", this->instUid_);
-		fwrite ( splitter, 1, 2, fpFuncs_ ); 
-
-	    fwrite ( curMethod->clazz->descriptor, 1, strlen(curMethod->clazz->descriptor), fpFuncs_ ); 
-	    fwrite ( splitter, 1, 2, fpFuncs_ ); 
-	    fwrite ( curMethod->name, 1, strlen(curMethod->name), fpFuncs_ ); 
-	    fwrite ( splitter, 1, 2, fpFuncs_ ); 
-	    fwrite ( curMethod->shorty, 1, strlen(curMethod->shorty), fpFuncs_ ); 
-	    fwrite ( file_end, 1, 2, fpFuncs_ ); 
-	    fflush ( fpFuncs_);
-	    
-		//ALOG( LOG_VERBOSE, "YWB", "funcs: %s,%s,%s\n", curMethod->clazz->descriptor,curMethod->name, curMethod->shorty);
-	}
-
 	void Tracer::record_str( const u2 * const str, size_t len, ObjWriteMode flag )
 	{
 		const unsigned char n = '\n' ;
@@ -160,7 +57,7 @@ namespace gossip_loccs
 			f = fpObj_;
 		else
 		{
-			ALOG ( LOG_VERBOSE, "YWB", "error in which file to write" );
+			GOSSIP ( "error in which file to write" );
 			return;
 		}
 
@@ -182,66 +79,6 @@ namespace gossip_loccs
 		fflush( f );
 	}
 
-//maybe wrong!!!
-	void Tracer::record_normal( char t, u4* v, ObjWriteMode flag)
-	{
-		const unsigned char n = '\n';
-		//const unsigned char space = ' ';
-		FILE *f;
-
-		if ( flag == FUNC_OBJ || flag == FUNC_STR )
-			f = fpFuncs_;
-		else if ( flag == OPC_OBJ || flag == OPC_STR )
-			f = fpObj_;
-		else
-		{
-			GOSSIP ( "error in which file to write" );
-			return;
-		}
-
-		if ( flag == OPC_STR )
-		{
-			fprintf( f, "instUid %u", this->instUid_);
-		}
-
-		if ( flag == OPC_STR || flag == FUNC_STR )
-		{
-			if ( t == 'I' || t == 'Z' || t == 'S')
-				fprintf(f, " #%d: ", INTEGER);
-
-			if ( t == 'D' )
-				fprintf(f, " #%d: ", DOUBLE);
-		}
-
-		if ( t == 'I' || t == 'Z' || t == 'S')
-			fprintf(f, " %d ", *v);
-
-		if ( t == 'D' )
-		{
-			union myunion m;
-			m.u[0] = *v;
-			m.u[1] = *(v+1);
-			fprintf(f, " %lf ", m.d );
-		}	
-
-
-/*
-		if ( t == 'I' || t == 'Z' || t == 'S')
-		{
-			if (flag == FUNC_STR)
-				fprintf(fpFuncs_, "#%d: %x\n", INTEGER, *v);
-			else if (flag == FUNC_OBJ)
-				fprintf(fpFuncs_, "%x\n", *v);
-			fflush(fpFuncs_);
-		}
-*/
-		fwrite( &n, 1, 1, f );
-		fflush( f );
-		return ;
-
-
-	}
-
 	bool Tracer::check_obj (  const Object * const obj )
 	{
 		if ( obj == NULL )
@@ -253,65 +90,7 @@ namespace gossip_loccs
 		return true;
 	}
 
-	void Tracer::monitor_para( const Method * const m, u4* pr)
-	{
-		if (! (recordFlag_ & 0x02))
-			return ;
-		if ( m == NULL)
-			return;
-		
-		const char *s = m->shorty;
-		int l = strlen( s );
 
-		for ( int i = 0; i < l; i++ )
-		{
-			fprintf(fpFuncs_, "p[%d]: ", i);
-			if ( s[i] == 'L' )
-			{
-				this->record_para_retval( (Object*) pr[i] );
-			}
-			else 
-				this->record_normal(s[i], pr + i, FUNC_STR);
-			//fprintf(fpFuncs_, "\n" );
-		}
-		fflush(fpFuncs_);
-	}
-
-	void Tracer::monitor_retval( const char* sn, s8& rj)
-	{
-		if (! (recordFlag_ & 0x02))
-			return ;
-		fprintf(fpFuncs_, "rv: ");
-		if (sn[0] == 'L')
-		{
-			//ALOG(LOG_VERBOSE,"YWB","monitor retval! %llx",*rj);
-			this->record_para_retval( (Object*) rj );
-		}
-		else
-		{
-			union myunion m;
-			//ALOG(LOG_VERBOSE,"YWB","monitor_retvalllll %llx", rj);
-			m.s = rj;
-			//ALOG(LOG_VERBOSE,"YWB","monitor_retval %llx", (s8)m.d);
-			//ALOG(LOG_VERBOSE,"YWB","monitor_retval %llx", m.d);
-			this->record_normal( sn[0], m.u, FUNC_STR );
-		}
-			
-		//fprintf(fpFuncs_, "\n" );
-		fflush(fpFuncs_);
-
-	}
-
-	void Tracer::retvalid()
-	{
-		fprintf(fpFuncs_, "return value is valid!!!!!!!\n" );
-	}
-
-	void Tracer::record_para_retval( Object * obj)
-	{
-		//ALOG(LOG_VERBOSE,"YWB", "11111111111");
-		this->record_obj( obj, TO_FUNC);
-	}
 
 	void Tracer::monitor_obj ( Object * obj)
 	{
@@ -931,26 +710,5 @@ namespace gossip_loccs
 		
 	}
 
-	void inline Tracer::reg_table_to_Buff( const u4 (&regTable)[RegMaxNum], Buff& buff )
-	{
-		memset( &(buff), 0, sizeof(Buff) );
-
-		size_t count_b = 0;
-		size_t count_i = 0;
-
-	    for ( size_t i = 0; i < RegMaxNum; ++i )
-		{
-			if ( regTable[i] != 0 )
-			{
-				buff.buf[count_b++] = regTable[i];
-				buff.index[count_i++] = static_cast<u1>(i + 1);	// in order to recognize reg 0, we change off-by-one
-			}
-			if ( count_b == 6 ) // we assume that no more than 6 registers are used in a single instruction, although it is not true...
-			{
-				GOSSIP( "full reg error\n" );
-				break;
-			}
-		}
-	}
 }; // end of namespace gossip_loccs
 

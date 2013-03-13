@@ -5,5 +5,11 @@ HANDLE_OPCODE($opcode /*vAA, vBBBB*/)
         (INST_INST(inst) == OP_MOVE_FROM16) ? "" : "-object", vdst, vsrc1,
         kSpacing, vdst, GET_REGISTER(vsrc1));
     SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE_FROM16
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif
     FINISH(2);
 OP_END

@@ -2,13 +2,10 @@
 #define _DIAOS_OPCODE_TRACER_H_
 
 #include <string>
-#include <map>
-
-#include "Dalvik.h"
-#include "interp/InterpDefs.h"
-#include "mterp/Mterp.h"
+#include <set>
 
 #include "indroid/tracer/Tracer.h"
+#include "indroid/filter/Filter.h"
 
 namespace gossip_loccs
 {
@@ -25,15 +22,16 @@ public:
 	bool init			( const std::string & apkDir );
 	void record_opcode	( const u2 * const pc, u4 threadId, const Method * const method );
 	u4 get_instUid		();
+	void flush_traceFile	();
 
 private:
 	void save_opcode_pool();
 	bool init_traceFile	();
 	std::string tracePoolFileName_;
+	FILE * tracePoolFile_;
 
 	u4								instUid_;
-	std::map<u4, std::string>		methodPool_;
-	std::map<u4, Insts>	opcodePool_; 
+	std::set<u4>					opcodeSet_; 
 };
 
 

@@ -21,6 +21,8 @@ namespace gossip_loccs
 	{
 		if ( !this->init_uidmap() )
 			GOSSIP ( "uidmap init process failure" );
+		else 
+			GOSSIP ( "uidmap init process success");
 	}
 
 	bool UtilProc::init_uidmap()

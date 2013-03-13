@@ -33,6 +33,7 @@
 #include "indroid/Probe.h"
 #include "indroid/tracer/OpcodeTracer.h"
 #include "indroid/tracer/RegTracer.h"
+#include "indroid/tracer/FuncTracer.h"
 #endif
 
 /*
@@ -1969,8 +1970,10 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 #if defined(LOCCS_DIAOS)
 	extern gossip_loccs::OpcodeTracer opcodeTracer;
 	extern gossip_loccs::RegTracer regTracer;
+    extern gossip_loccs::FuncTracer funcTracer;
 	opcodeTracer.flush_traceFile();
 	regTracer.flush_traceFile();
+    funcTracer.flush_traceFile();
 #endif
 
     *pResult = self->interpSave.retval;

@@ -13,6 +13,9 @@ HANDLE_OPCODE(OP_CONST_STRING /*vAA, string@BBBB*/)
                 GOTO_exceptionThrown();
         }
         SET_REGISTER(vdst, (u4) strObj);
+#if defined(LOCCS_DIAOS)
+        diaos_monitor_object(curMethod, strObj);
+#endif
     }
     FINISH(2);
 OP_END

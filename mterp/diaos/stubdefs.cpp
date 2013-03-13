@@ -36,7 +36,7 @@
 # define HANDLE_OPCODE(_op) op_##_op:
 #ifdef LOCCS_DIAOS
 # define FINISH(_offset) {                                                  \
-		diaos_monitor_opcode( pc, fp, self );								\
+		diaos_monitor_opcode( pc, fp, self, curMethod );					\
         ADJUST_PC(_offset);                                                 \
         inst = FETCH(0);                                                    \
         if (self->interpBreak.ctl.subMode) {                                \

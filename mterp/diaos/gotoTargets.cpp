@@ -543,6 +543,11 @@ GOTO_TARGET(returnFromMethod)
             curMethod->shorty);
         //DUMP_REGS(curMethod, fp);
 
+#if defined(LOCCS_DIAOS)
+        //store the method and return value information, but not sure it's called by traced class
+        diaos_monitor_temp_info( curMethod, retval.j );
+#endif
+
         saveArea = SAVEAREA_FROM_FP(fp);
 
 #ifdef EASY_GDB
@@ -574,6 +579,11 @@ GOTO_TARGET(returnFromMethod)
         pc = saveArea->savedPc;
         ILOGD("> (return to %s.%s %s)", curMethod->clazz->descriptor,
             curMethod->name, curMethod->shorty);
+
+#if defined(LOCCS_DIAOS)
+        // be sure the method is called by traced class
+        diaos_monitor_retval();
+#endif
 
         /* use FINISH on the caller's invoke instruction */
         //u2 invokeInstr = INST_INST(FETCH(0));
@@ -816,6 +826,10 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             }
 #endif
         }
+#if defined(LOCCS_DIAOS)
+        diaos_monitor_func_call( methodToCall );
+        diaos_monitor_parameter( methodToCall, outs );
+#endif
     }
 
     /*

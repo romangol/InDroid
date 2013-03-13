@@ -3,10 +3,6 @@
 
 #include <string>
 
-#include "Dalvik.h"
-#include "interp/InterpDefs.h"
-#include "mterp/Mterp.h"
-
 #include "indroid/tracer/Tracer.h"
 #include "indroid/Constant.h"
 
@@ -21,7 +17,7 @@ public:
 	void record_reg		( RegOpType type, const u4 * const fp, u2 index, u4 instUid );
 
 private:
-	bool init_traceFile	();
+
 };
 
 

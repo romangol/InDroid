@@ -229,13 +229,13 @@ static RegOpType regType;
 
 inline u4 get_reg( const u4 * const fp, size_t index )
 {
-	diaos_monitor_reg ( regType = READ, fp, index );
+	diaos_monitor_reg ( regType = REG_READ, fp, index );
 	return fp[index]; 
 }
 
 inline Object* get_reg_as_obj( const u4 * const fp, size_t index )
 {
-	diaos_monitor_reg ( regType = READ_OBJ, fp, index );
+	diaos_monitor_reg ( regType = REG_READ_OBJ, fp, index );
 	Object * o = reinterpret_cast<Object *> (fp[index]);
 
 	//tracer.monitor_obj(o);
@@ -245,62 +245,62 @@ inline Object* get_reg_as_obj( const u4 * const fp, size_t index )
 
 inline s4 get_reg_int( const u4 * const fp, size_t index )
 {
-	diaos_monitor_reg ( regType = READ_INT, fp, index );
+	diaos_monitor_reg ( regType = REG_READ_INT, fp, index );
 	return static_cast<s4>( fp[index] ); 
 }
 
 inline float get_reg_float( const u4 * const fp, size_t index )
 {
-	diaos_monitor_reg ( regType = READ_FLOAT, fp, index);
+	diaos_monitor_reg ( regType = REG_READ_FLOAT, fp, index);
 	return *( (float*) &fp[index] );
 }
 
 inline s8 get_reg_wide( const u4 * const fp, size_t index )
 {
-	diaos_monitor_reg ( regType = READ_WIDE, fp, index);
+	diaos_monitor_reg ( regType = REG_READ_WIDE, fp, index);
 	return getLongFromArray(fp, index); 
 }
 
 inline double get_reg_double( const u4 * const fp, size_t index )
 {
-	diaos_monitor_reg ( regType = READ_DOUBLE, fp, index);
+	diaos_monitor_reg ( regType = REG_READ_DOUBLE, fp, index);
 	return getDoubleFromArray (fp, index); 
 }
 
 inline void set_reg( u4 * const fp, size_t index, u4 val )
 {
 	fp[index] = val; 
-	diaos_monitor_reg ( regType = WRITE, fp, index);
+	diaos_monitor_reg ( regType = REG_WRITE, fp, index);
 }
 
 inline void set_reg_as_obj( u4 * const fp, size_t index, const Object * const val )
 {
 	fp[index] = reinterpret_cast<u4>(val); 
-	diaos_monitor_reg ( regType = WRITE_OBJ, fp, index);
+	diaos_monitor_reg ( regType = REG_WRITE_OBJ, fp, index);
 }
 
 inline void set_reg_int( u4 * const fp, size_t index, s4 val )
 {
 	fp[index] = val; 
-	diaos_monitor_reg ( regType = WRITE_INT, fp, index);
+	diaos_monitor_reg ( regType = REG_WRITE_INT, fp, index);
 }
 
 inline void set_reg_float( u4 * const fp, size_t index, float val )
 {
 	*((float*) &fp[index]) = val;
-	diaos_monitor_reg ( regType = WRITE_FLOAT, fp, index );
+	diaos_monitor_reg ( regType = REG_WRITE_FLOAT, fp, index );
 }
 
 inline void set_reg_wide( u4 * const fp, size_t index, s8 val )
 {
 	putLongToArray (fp, index, val);
-	diaos_monitor_reg ( regType = WRITE_WIDE, fp, index);
+	diaos_monitor_reg ( regType = REG_WRITE_WIDE, fp, index);
 }
 
 inline void set_reg_double( u4 * const fp, size_t index, double val )
 {
 	putDoubleToArray(fp, index, val );
-	diaos_monitor_reg ( regType = WRITE_DOUBLE, fp, index);
+	diaos_monitor_reg ( regType = REG_WRITE_DOUBLE, fp, index);
 }
 
 # define GET_REGISTER(_idx)                 get_reg( fp, (_idx) ) 

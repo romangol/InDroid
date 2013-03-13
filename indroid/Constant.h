@@ -1,5 +1,6 @@
 #ifndef _DIAOS_CONSTANT_H_
 #define _DIAOS_CONSTANT_H_
+#include <stdint.h>
 
 
 static unsigned int inline BKDRHash( const char * const str )
@@ -15,9 +16,10 @@ static unsigned int inline BKDRHash( const char * const str )
 
 namespace gossip_loccs
 {
-	typedef unsigned int	u4;
+	typedef unsigned int 	u4;
 	typedef unsigned short	u2;
 	typedef unsigned char	u1;
+	typedef long long		s8;
 
 	//directory's permission must be system!! if we create a directory, it's root. so we should use existed directory
 	//const static std::string SystemServerDir = "/data/system"; 
@@ -42,20 +44,52 @@ namespace gossip_loccs
 	const static u4	StrMaxLen			= 1024;
 	const static u4	RegBufMaxLen		= 1024;
 
+	const static uint8_t DefaultRecordFlag = 0x05;
+	const static uint8_t ObjFlag = 0x01;
+	const static uint8_t PaReFlag = 0x02;
+	const static uint8_t FuncFlag = 0x04;
+	const static uint8_t OpcodeFlag = 0x8; 
+
 enum RegOpType
 {
-	READ,
-	WRITE,
-	READ_INT,
-	WRITE_INT,
-	READ_OBJ,
-	WRITE_OBJ,
-	READ_WIDE,
-	WRITE_WIDE,
-	READ_FLOAT,
-	WRITE_FLOAT,
-	READ_DOUBLE,
-	WRITE_DOUBLE
+	REG_READ,
+	REG_WRITE,
+	REG_READ_INT,
+	REG_WRITE_INT,
+	REG_READ_OBJ,
+	REG_WRITE_OBJ,
+	REG_READ_WIDE,
+	REG_WRITE_WIDE,
+	REG_READ_FLOAT,
+	REG_WRITE_FLOAT,
+	REG_READ_DOUBLE,
+	REG_WRITE_DOUBLE
+};
+
+enum ObjWriteMode 
+{
+	BASIC_TYPE,
+	OBJECT_TYPE
+};
+
+enum ObjType {
+	OTHER_OBJ, 
+	INTEGER, 
+	DOUBLE, 
+	STR_OBJ, 
+	INTENT_OBJ, 
+	CMPNM_OBJ, 
+	ACTINFO_OBJ, 
+	PROREC_OBJ, 
+	ACTREC_OBJ,
+	LOCAT_OBJ, 
+	TEST_OBJ
+};
+
+union myunion{
+	double d;
+	u4 u[2];
+	s8 s;
 };
 
 struct RegRecord

@@ -13,6 +13,9 @@ HANDLE_OPCODE(OP_CONST_CLASS /*vAA, class@BBBB*/)
                 GOTO_exceptionThrown();
         }
         SET_REGISTER(vdst, (u4) clazz);
+#if defined(LOCCS_DIAOS)
+        diaos_monitor_object(curMethod, clazz);
+#endif
     }
     FINISH(2);
 OP_END

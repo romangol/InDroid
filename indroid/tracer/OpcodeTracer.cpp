@@ -18,9 +18,10 @@
 
 using std::string;
 using std::vector;
-using std::map;
+using std::set;
 using std::ifstream;
-	
+
+extern gossip_loccs::Filter filter;
 namespace gossip_loccs
 {
 	struct InstRecord
@@ -48,78 +49,79 @@ namespace gossip_loccs
 
 		// generates opcodes.bin full name
 		snprintf ( f, MaxLineLen, "%s/opcode_%d.bin", apkDir_.c_str(), getpid() );
-		snprintf ( g, MaxLineLen, "%s/opcodePool_%d.bin", apkDir_.c_str(), getpid() );
+		snprintf ( g, MaxLineLen, "%s/opcodeSet_%d.bin", apkDir_.c_str(), getpid() );
 		traceFileName_ = string(f);
 		tracePoolFileName_ = string(g);
+		return init_traceFile();
+	}
+
+	bool OpcodeTracer::init_traceFile() 
+	{
+		tracePoolFile_ = fopen ( tracePoolFileName_.c_str(), "wb" );
+
+		if ( tracePoolFile_ == NULL )
+		{
+			GOSSIP( "open %s error!\n", tracePoolFileName_.c_str() );
+			return false;
+		}
 		return Tracer::init_traceFile();
+	}
+	
+	void OpcodeTracer::flush_traceFile() 
+	{
+		fflush( tracePoolFile_ );
+		Tracer::flush_traceFile();
 	}
 
 	void OpcodeTracer::record_opcode( const u2 * const pc, u4 threadId, const Method * const method )
 	{
 		++instUid_;
-
-		/*
-		if ( !(recordFlag_ & 0x08) )
-		{
-			this->instUid_++;
+		if ( !filter.record_should_be_opened(OpcodeFlag) )
 			return ;
-		}
-		*/
 
-		static InstRecord r;
+		static const Method * oldMethod = NULL;
+		static u4 oldThreadId = 0xFFFFFFFF;
+		static const u4 ThreadIdHead = 0xFFFFFFFF;
+		static Insts ins; 
+
+		// record threadId when it is changed
+	    if ( oldThreadId != threadId )
+		{
+			if ( fwrite( &ThreadIdHead, sizeof(u4), 1, traceFile_ ) != 1 )
+				GOSSIP( "write %s error when recording threadId head\n", traceFileName_.c_str() );
+			if ( fwrite( &threadId, sizeof(u4), 1, traceFile_ ) != 1 )
+				GOSSIP( "write %s error when recording threadId\n", traceFileName_.c_str() );
+
+			oldThreadId = threadId;
+		}
 
 		/* record opcode contents */ 
-	    r.threadId = threadId ;
-	    r.pc = (u4) (pc);
+	    u4 ipc = (u4) (pc);
 
-		if ( opcodePool_.find( r.pc ) == opcodePool_.end() )
-		{
-			static Insts ins; 
-
-			/* must use assignment operation!!! */
-			for ( size_t i = 0; i < InstNum; ++i )
-				ins.in[i] = pc[i];
-			opcodePool_[r.pc] = ins;
-		} 
-	
-		static time_t oldTime = 0;
-		if ( 30 < time(NULL) - oldTime ) 
-		{
-			save_opcode_pool();
-			time( &oldTime );
-		}
-
-		// write one Struct each time.
-		if ( fwrite( &r, sizeof(InstRecord), 1, traceFile_ ) != 1 )
+		// record pc only
+		if ( fwrite( &ipc, sizeof(u4), 1, traceFile_ ) != 1 )
 		{
 			GOSSIP( "write %s error\n", traceFileName_.c_str() );
 		}
 		
-	}
-
-	void OpcodeTracer::save_opcode_pool()
-	{
-		static size_t poolSize = 0;
-		if ( poolSize != opcodePool_.size() )
+		if ( opcodeSet_.find( ipc ) == opcodeSet_.end() )
 		{
-			FILE * f = fopen ( tracePoolFileName_.c_str(), "wb" );
-			if ( f == NULL )
-			{
-				GOSSIP( "open %s error!\n", tracePoolFileName_.c_str() );
-				return;
-			}
+			opcodeSet_.insert( ipc );
 
-			for ( map<u4, Insts>::iterator it = opcodePool_.begin(); it != opcodePool_.end(); ++it )
-			{
-				if ( fwrite( &(it->first), sizeof(u4), 1, f ) != 1 )
-					GOSSIP( "write pool %s error\n", tracePoolFileName_.c_str() );
-				if ( fwrite( &(it->second), sizeof(Insts), 1, f ) != 1 )
-					GOSSIP( "write pool %s error\n", tracePoolFileName_.c_str() );
-			}
+			/* must use assignment operation!!! */
+			for ( size_t i = 0; i < InstNum; ++i )
+				ins.in[i] = pc[i];
 
-			fclose( f );
-			poolSize = opcodePool_.size();
-			GOSSIP( "New pool size %d\n", poolSize );
+			if ( fwrite( &ipc, sizeof(u4), 1, tracePoolFile_ ) != 1 )
+				GOSSIP( "write pool %s error when writing ipc\n", tracePoolFileName_.c_str() );
+			if ( fwrite( &ins, sizeof(Insts), 1, tracePoolFile_ ) != 1 )
+				GOSSIP( "write pool %s error when writing instRecord\n", tracePoolFileName_.c_str() );
+		} 
+
+		if ( oldMethod != method )
+		{
+			oldMethod = method;
+			GOSSIP ( "Method changes to %s, %s\n", method->clazz->descriptor, method->name );
 		}
 	}
 

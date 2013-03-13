@@ -46,13 +46,20 @@ namespace gossip_loccs
 		if ( fwrite( &instUid, sizeof(u4), 1, traceFile_ ) != 1 )
 			GOSSIP( "RegTracer record instUid failed\n");
 
-		/*
 		if ( fwrite( &index, sizeof(u2), 1, traceFile_ ) != 1 )
 			GOSSIP( "RegTracer record index failed\n");
-		if ( fwrite( &value, sizeof(u4), 1, traceFile_ ) != 1 )
-			GOSSIP( "RegTracer record value failed\n");
-		*/
 
+		if( type == REG_READ_FLOAT || type == REG_READ_WIDE || type == REG_READ_DOUBLE || 
+			type == REG_WRITE_FLOAT || type == REG_WRITE_WIDE || type == REG_WRITE_DOUBLE )
+		{
+			if ( fwrite( fp, sizeof(u4), 2, traceFile_ ) != 2 )
+				GOSSIP( "RegTracer record long value failed\n");
+		}
+		else
+		{
+			if ( fwrite( fp, sizeof(u4), 1, traceFile_ ) != 1 )
+				GOSSIP( "RegTracer record value failed\n");
+		}
 	}
 
 }; // end of namespace gossip_loccs

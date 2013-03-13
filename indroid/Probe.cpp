@@ -1,6 +1,9 @@
 #include "indroid/Probe.h"
 #include "indroid/tracer/OpcodeTracer.h"
 #include "indroid/tracer/RegTracer.h"
+#include "indroid/tracer/FuncTracer.h"
+#include "indroid/tracer/ObjTracer.h"
+#include "indroid/tracer/PaReTracer.h"
 #include "indroid/filter/Filter.h"
 #include "indroid/utils/Utilproc.h"
 
@@ -16,6 +19,9 @@ Filter filter;
 // init tracers to record runtime data.
 OpcodeTracer opcodeTracer;
 RegTracer regTracer;
+FuncTracer funcTracer;
+ObjTracer objTracer;
+PaReTracer pareTracer;
 
 // define YWB message output macro
 #define DIAOS_DBG 1
@@ -65,17 +71,20 @@ bool diaos_init()
 	filter.init( util.get_apk_dir() );
 	status &= opcodeTracer.init( util.get_apk_dir() );
 	status &= regTracer.init( util.get_apk_dir() );
+	status &= funcTracer.init( util.get_apk_dir() );
+	status &= objTracer.init( util.get_apk_dir() );
+	status &= pareTracer.init();
 
 	return status;
 }
 
-void diaos_monitor_opcode ( const u2 * const pc, const u4 * const fp, const Thread * const self )
+void diaos_monitor_opcode ( const u2 * const pc, const u4 * const fp, const Thread * const self, const Method * method )
 {
-	if ( filter.class_should_be_traced( self->interpSave.method->clazz->descriptor ) )   
+	if ( filter.class_should_be_traced( method->clazz->descriptor ) )   
 	{
 		// set traceFlag once for a single opcode, so that in monitor_reg() the filter should not be invoked.
 		traceFlag = true;
-		opcodeTracer.record_opcode( pc, self->threadId, self->interpSave.method );
+		opcodeTracer.record_opcode( pc, self->threadId, method );
 	}
 	else
 		traceFlag = false;
@@ -88,15 +97,42 @@ void diaos_monitor_reg( RegOpType type, const u4 * const fp, u2 index )
 }
 
 
-#if 0
+
 void diaos_monitor_func_call( const Method * const m )
 {
-	if ( traceFlag )   
-		tracer.record_func_call( m );
+	if ( traceFlag && filter.record_should_be_opened(FuncFlag) )   
+		funcTracer.record_func( m, opcodeTracer.get_instUid() );
 }
-void diaos_monitor_object( const Method * const m, const Object * const obj )
+
+void diaos_monitor_object( const Method * const m, Object *obj )
 {
-	if ( traceFlag )   
-		tracer.extract_str(obj);
+	if ( traceFlag && filter.record_should_be_opened(ObjFlag) && filter.object_should_be_traced(obj) )
+	{
+		objTracer.record_obj(obj);
+	}
 }
+
+void diaos_monitor_parameter(const Method * const m, u4* pr)
+{
+	if ( traceFlag && filter.record_should_be_opened(PaReFlag) && filter.method_should_be_traced(m) )
+	{
+		funcTracer.record_func( m, opcodeTracer.get_instUid() );
+		pareTracer.record_para( m, pr );
+	}
+		
+}
+
+void diaos_monitor_temp_info(const Method * const m, s8& rj )
+{
+	if ( filter.record_should_be_opened(PaReFlag) && filter.method_should_be_traced(m) )
+		pareTracer.record_temp_info( m, rj );
+}
+
+void diaos_monitor_retval()
+{
+	if ( traceFlag && filter.record_should_be_opened(PaReFlag) 
+		&& filter.method_should_be_traced( pareTracer.get_className(), pareTracer.get_methodName() ) )
+		pareTracer.record_retval();
+}
+#if 0
 #endif

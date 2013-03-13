@@ -1175,6 +1175,12 @@ HANDLE_OPCODE(OP_MOVE /*vA, vB*/)
         (INST_INST(inst) == OP_MOVE) ? "" : "-object", vdst, vsrc1,
         kSpacing, vdst, GET_REGISTER(vsrc1));
     SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");               
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif
     FINISH(1);
 OP_END
 
@@ -1186,6 +1192,12 @@ HANDLE_OPCODE(OP_MOVE_FROM16 /*vAA, vBBBB*/)
         (INST_INST(inst) == OP_MOVE_FROM16) ? "" : "-object", vdst, vsrc1,
         kSpacing, vdst, GET_REGISTER(vsrc1));
     SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE_FROM16
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif
     FINISH(2);
 OP_END
 
@@ -1197,6 +1209,12 @@ HANDLE_OPCODE(OP_MOVE_16 /*vAAAA, vBBBB*/)
         (INST_INST(inst) == OP_MOVE_16) ? "" : "-object", vdst, vsrc1,
         kSpacing, vdst, GET_REGISTER(vsrc1));
     SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE_16
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif
     FINISH(3);
 OP_END
 
@@ -1241,6 +1259,12 @@ HANDLE_OPCODE(OP_MOVE_OBJECT /*vA, vB*/)
         (INST_INST(inst) == OP_MOVE) ? "" : "-object", vdst, vsrc1,
         kSpacing, vdst, GET_REGISTER(vsrc1));
     SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");               
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif
     FINISH(1);
 OP_END
 
@@ -1254,6 +1278,12 @@ HANDLE_OPCODE(OP_MOVE_OBJECT_FROM16 /*vAA, vBBBB*/)
         (INST_INST(inst) == OP_MOVE_FROM16) ? "" : "-object", vdst, vsrc1,
         kSpacing, vdst, GET_REGISTER(vsrc1));
     SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE_FROM16
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif
     FINISH(2);
 OP_END
 
@@ -1267,6 +1297,12 @@ HANDLE_OPCODE(OP_MOVE_OBJECT_16 /*vAAAA, vBBBB*/)
         (INST_INST(inst) == OP_MOVE_16) ? "" : "-object", vdst, vsrc1,
         kSpacing, vdst, GET_REGISTER(vsrc1));
     SET_REGISTER(vdst, GET_REGISTER(vsrc1));
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE_16
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif
     FINISH(3);
 OP_END
 
@@ -1278,6 +1314,12 @@ HANDLE_OPCODE(OP_MOVE_RESULT /*vAA*/)
          (INST_INST(inst) == OP_MOVE_RESULT) ? "" : "-object",
          vdst, kSpacing+4, vdst,retval.i);
     SET_REGISTER(vdst, retval.i);
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE_RESULT
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif 
     FINISH(1);
 OP_END
 
@@ -1297,6 +1339,12 @@ HANDLE_OPCODE(OP_MOVE_RESULT_OBJECT /*vAA*/)
          (INST_INST(inst) == OP_MOVE_RESULT) ? "" : "-object",
          vdst, kSpacing+4, vdst,retval.i);
     SET_REGISTER(vdst, retval.i);
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_MOVE_RESULT
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vdst));
+#endif
+#endif 
     FINISH(1);
 OP_END
 
@@ -1326,6 +1374,12 @@ HANDLE_OPCODE(OP_RETURN /*vAA*/)
     ILOGV("|return%s v%d",
         (INST_INST(inst) == OP_RETURN) ? "" : "-object", vsrc1);
     retval.i = GET_REGISTER(vsrc1);
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_RETURN
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vsrc1));
+#endif
+#endif
     GOTO_returnFromMethod();
 OP_END
 
@@ -1344,6 +1398,12 @@ HANDLE_OPCODE(OP_RETURN_OBJECT /*vAA*/)
     ILOGV("|return%s v%d",
         (INST_INST(inst) == OP_RETURN) ? "" : "-object", vsrc1);
     retval.i = GET_REGISTER(vsrc1);
+#if defined(LOCCS_DIAOS)
+#if INST_INST(inst) != OP_RETURN
+    //ALOG(LOG_VERBOSE,"YWB","need to verify object");
+    diaos_monitor_object(curMethod, (Object*)GET_REGISTER(vsrc1));
+#endif
+#endif
     GOTO_returnFromMethod();
 OP_END
 
@@ -1457,6 +1517,9 @@ HANDLE_OPCODE(OP_CONST_STRING /*vAA, string@BBBB*/)
                 GOTO_exceptionThrown();
         }
         SET_REGISTER(vdst, (u4) strObj);
+#if defined(LOCCS_DIAOS)
+        diaos_monitor_object(curMethod, strObj);
+#endif
     }
     FINISH(2);
 OP_END
@@ -1479,6 +1542,9 @@ HANDLE_OPCODE(OP_CONST_STRING_JUMBO /*vAA, string@BBBBBBBB*/)
                 GOTO_exceptionThrown();
         }
         SET_REGISTER(vdst, (u4) strObj);
+#if defined(LOCCS_DIAOS)
+        diaos_monitor_object(curMethod, strObj);
+#endif
     }
     FINISH(3);
 OP_END
@@ -1499,6 +1565,9 @@ HANDLE_OPCODE(OP_CONST_CLASS /*vAA, class@BBBB*/)
                 GOTO_exceptionThrown();
         }
         SET_REGISTER(vdst, (u4) clazz);
+#if defined(LOCCS_DIAOS)
+        diaos_monitor_object(curMethod, clazz);
+#endif
     }
     FINISH(2);
 OP_END
@@ -1681,6 +1750,9 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
         if (newObj == NULL)
             GOTO_exceptionThrown();
         SET_REGISTER(vdst, (u4) newObj);
+#if defined(LOCCS_DIAOS)
+        diaos_monitor_object(curMethod, newObj);
+#endif
     }
     FINISH(2);
 OP_END
