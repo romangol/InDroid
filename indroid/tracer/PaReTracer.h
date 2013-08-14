@@ -8,7 +8,7 @@
 #include "indroid/tracer/FuncTracer.h"
 #include "indroid/filter/Filter.h"
 	
-
+using std::string;
 
 namespace gossip_loccs
 {	
@@ -20,14 +20,14 @@ namespace gossip_loccs
 		void record_retval	();
 		void record_para		( const Method * const m, u4* pr );
 		void record_temp_info ( const Method * const m, s8& rj );
-		char* get_className();
-		char* get_methodName();
+		const char* get_className();
+		const char* get_methodName();
 
 	private:
 		s8 				retjval;
-		char className[ClassNameMaxLen];
-		char methodName[MethodNameMaxLen];
-		char shortyName[ShortyNameMaxLen];
+		string className;
+		string methodName;
+		string shortyName;
 	};
 
 }

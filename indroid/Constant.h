@@ -75,6 +75,12 @@ enum ObjWriteMode
 enum ObjType {
 	OTHER_OBJ, 
 	INTEGER, 
+	BYTE,
+	BOOLEAN,
+	SHORT,
+	CHAR,
+	LONG,
+	FLOAT,
 	DOUBLE, 
 	STR_OBJ, 
 	INTENT_OBJ, 
@@ -82,7 +88,8 @@ enum ObjType {
 	ACTINFO_OBJ, 
 	PROREC_OBJ, 
 	ACTREC_OBJ,
-	LOCAT_OBJ, 
+	LOCAT_OBJ,
+	STRURI_OBJ,
 	TEST_OBJ
 };
 

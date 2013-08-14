@@ -33,8 +33,10 @@ public:
 	void extract_procRecord		( const Object* const obj );
 	void extract_compName		( const Object * const obj );
 	void extract_activInfo		( const Object* const obj );
+	void extract_stringUri		( const Object* const obj );
 
 	void modify_intent( Object * obj);
+	void dump_obj( const Object * const obj );
 
 private:
 	//bool init_traceFile	();

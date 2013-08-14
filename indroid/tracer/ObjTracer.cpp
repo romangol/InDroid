@@ -61,15 +61,39 @@ namespace gossip_loccs
 			//GOSSIP("normal  filename %s", traceFileName_.c_str());
 			fprintf( traceFile_, "instUid %u", opcodeTracer.get_instUid());
 
-			if ( t == 'I' || t == 'Z' || t == 'S')
+			if ( t == 'I' )
 				fprintf(traceFile_, " #%d: ", INTEGER);
-
-			if ( t == 'D' )
+			else if ( t == 'Z' )
+				fprintf(traceFile_, " #%d: ", BOOLEAN);
+			else if ( t == 'B' )
+				fprintf(traceFile_, " #%d: ", BYTE);
+ 			else if ( t == 'S' )
+				fprintf(traceFile_, " #%d: ", SHORT);
+			else if ( t == 'C' )
+				fprintf(traceFile_, " #%d: ", CHAR);
+			else if ( t == 'J' )
+				fprintf(traceFile_, " #%d: ", LONG);
+			else if ( t == 'F' )
+				fprintf(traceFile_, " #%d: ", FLOAT);
+			else if ( t == 'D' )
 				fprintf(traceFile_, " #%d: ", DOUBLE);
 		}
 
-		if ( t == 'I' || t == 'Z' || t == 'S')
+		if ( t == 'I' || t == 'Z' || t == 'S' || t == 'B')
 			fprintf(traceFile_, " %d ", *v);
+/*
+		if ( t =='B' )
+			fprintf(traceFile_, " %02x ", *v);
+
+		if ( t == 'F' )
+		{
+			float f = *v;
+			fprintf(traceFile_, " %f ",f);
+		}*/
+			
+
+		if ( t == 'C' )
+			fprintf(traceFile_, " %c ", *v);
 
 		if ( t == 'D' )
 		{
@@ -77,6 +101,14 @@ namespace gossip_loccs
 			m.u[0] = *v;
 			m.u[1] = *(v+1);
 			fprintf(traceFile_, " %lf ", m.d );
+		}
+
+		if ( t == 'J' )
+		{
+			union myunion m;
+			m.u[0] = *v;
+			m.u[1] = *(v+1);
+			fprintf(traceFile_, " %ld ", (long)(m.s) );			
 		}	
 
 		fwrite( &n, 1, 1, traceFile_ );
@@ -136,7 +168,11 @@ namespace gossip_loccs
 			this->extract_activRecord( obj );
 
 		else if ( hash == BKDRHash(ObjTest) )
+		{
 			this->extract_swapTestClass( obj );
+              this->dump_obj(obj);
+		}
+			
 
 		else
 		{
@@ -176,6 +212,31 @@ namespace gossip_loccs
 			opcodeTracer.get_instUid(), OTHER_OBJ, obj, obj->clazz->descriptor);
 
 		fflush(traceFile_);
+	}
+
+	void ObjTracer::extract_stringUri(const Object * const obj)
+	{
+		fprintf( traceFile_, "instUid %u #%d:  %p\n", 
+			opcodeTracer.get_instUid(), STRURI_OBJ, obj );
+
+		//uriString
+		InstField *pF = &obj->clazz->ifields[1];
+		Object *o = dvmGetFieldObject( obj, pF->byteOffset );
+		this->extract_str(o);
+
+		//scheme
+		pF = &obj->clazz->ifields[6];
+		o = dvmGetFieldObject( obj, pF->byteOffset );
+		this->extract_str(o);
+
+		//host in AbstractHierarchicalUri
+		ClassObject * cla = obj->clazz->super;
+		pF = &cla->ifields[0];
+		o = dvmGetFieldObject( obj, pF->byteOffset );
+		this->extract_str(o);
+
+		fflush(traceFile_);
+
 	}
 
 	void ObjTracer::extract_location(const Object * const obj)
@@ -463,6 +524,54 @@ namespace gossip_loccs
 		//dvmDumpObject(obj);
 		ALOG(LOG_VERBOSE,"YWB", "set action null");
 		dvmSetFieldObject( obj, pF->byteOffset, NULL);
+	}
+
+	void ObjTracer::dump_obj( const Object * const obj )
+	{
+		if ( !check_obj ( obj ) )
+		{
+			ALOG( LOG_VERBOSE, "YWB", "NULL OBJECT" );
+			return;
+		}
+		ClassObject* clazz = obj->clazz;
+/*
+		u4 hash = BKDRHash ( clazz->descriptor );
+		if ( objectFilter_.find( hash ) == objectFilter_.end() )
+			return;
+*/
+		ALOG( LOG_VERBOSE, "YWB", " class --%s ", clazz->descriptor );
+		for ( int i = 0; i < clazz->ifieldCount; i++ )
+		{
+			const InstField* pField = &clazz->ifields[i];
+			char type = pField->signature[0];
+				
+			if ( type == 'F' || type == 'D' )
+			{
+				double dval;
+				if ( type == 'F' )
+					dval = dvmGetFieldFloat( obj, pField->byteOffset );
+				else
+					dval = dvmGetFieldDouble( obj, pField->byteOffset );
+				ALOG( LOG_VERBOSE, "YWB", " %2d: %s, %s, %lf ", i, pField->name, pField->signature, dval );
+			}
+			else
+			{
+				u8 lval;
+				if ( type == 'J' )
+					lval = dvmGetFieldLong( obj, pField->byteOffset );
+				else if ( type == 'Z' )
+					lval = dvmGetFieldBoolean( obj, pField->byteOffset );
+				/*else if ( type == 'L' )
+				{
+					Object* o = dvmGetFieldObject ( obj, pField->byteOffset );
+					dump_obj ( o );
+				}*/
+				else
+					lval = dvmGetFieldInt( obj, pField->byteOffset );
+				ALOG( LOG_VERBOSE, "YWB", " %2d: %s, %s, 0x%08llx ", i, pField->name, pField->signature, lval );
+			}
+		}
+		
 	}
 
 }

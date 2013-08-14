@@ -35,6 +35,7 @@ static bool traceFlag = false;
 
 void diaos_monitor_mov( const u2 * const pc, const u4 * const fp, const Thread * const self )
 {
+	//GOSSIP( "a" ); 
 	/*
     const Method* method = self->interpSave.method;
 
@@ -92,21 +93,29 @@ void diaos_monitor_opcode ( const u2 * const pc, const u4 * const fp, const Thre
 
 void diaos_monitor_reg( RegOpType type, const u4 * const fp, u2 index )
 {
-	if ( traceFlag ) 
+	if ( traceFlag && filter.record_should_be_opened(OpcodeFlag) ) 
 		regTracer.record_reg( type, fp, index, opcodeTracer.get_instUid() );
 }
 
 
 
-void diaos_monitor_func_call( const Method * const m )
+void diaos_monitor_func_call( const Method * const method, const Method * const call )
 {
-	if ( traceFlag && filter.record_should_be_opened(FuncFlag) )   
-		funcTracer.record_func( m, opcodeTracer.get_instUid() );
+	if ( filter.class_should_be_traced( method->clazz->descriptor ) 
+		&& filter.record_should_be_opened(FuncFlag) )
+	{
+		funcTracer.record_func( call, opcodeTracer.get_instUid() );
+		traceFlag = true;
+	}
+	else
+		traceFlag = false;
+		
 }
 
 void diaos_monitor_object( const Method * const m, Object *obj )
 {
-	if ( traceFlag && filter.record_should_be_opened(ObjFlag) && filter.object_should_be_traced(obj) )
+	if ( filter.class_should_be_traced( m->clazz->descriptor ) 
+		&& filter.record_should_be_opened(ObjFlag) && filter.object_should_be_traced(obj) )
 	{
 		objTracer.record_obj(obj);
 	}
@@ -128,9 +137,9 @@ void diaos_monitor_temp_info(const Method * const m, s8& rj )
 		pareTracer.record_temp_info( m, rj );
 }
 
-void diaos_monitor_retval()
+void diaos_monitor_retval(const Method * method)
 {
-	if ( traceFlag && filter.record_should_be_opened(PaReFlag) 
+	if ( filter.class_should_be_traced( method->clazz->descriptor ) && filter.record_should_be_opened(PaReFlag) 
 		&& filter.method_should_be_traced( pareTracer.get_className(), pareTracer.get_methodName() ) )
 		pareTracer.record_retval();
 }

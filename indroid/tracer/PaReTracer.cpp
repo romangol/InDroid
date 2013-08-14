@@ -26,9 +26,7 @@ namespace gossip_loccs
 		traceFile_ = funcTracer.get_traceFile();
 		traceFileName_ = funcTracer.get_traceFileName();
 		retjval = 0;
-		memset(className, 0, sizeof(char)*ClassNameMaxLen );
-		memset(methodName, 0, sizeof(char)*MethodNameMaxLen );
-		memset(shortyName, 0, sizeof(char)*ShortyNameMaxLen );
+
 		if (traceFile_ == NULL)
 			return false;
 		return true;
@@ -40,7 +38,7 @@ namespace gossip_loccs
 		const char *s = m->shorty;
 		int l = strlen( s );
 
-		for ( int i = 0; i < l; i++ )
+		for ( int i = 1; i < l; i++ )
 		{
 			fprintf(traceFile_, "p[%d]: ", i);
 			if ( s[i] == 'L' )
@@ -48,12 +46,14 @@ namespace gossip_loccs
 				Object* o = (Object*) pr[i];
 				if ( filter.object_should_be_traced(o) )
 					record_obj(o);
+				else
+					fprintf(traceFile_, "\n");
 			}
 			else
 			{
-				GOSSIP("para file: %p", traceFile_);
+				//GOSSIP("para file: %p", traceFile_);
 				this->record_normal(s[i], pr + i, BASIC_TYPE);
-				GOSSIP("para file: %p", traceFile_);
+				//GOSSIP("para file: %p", traceFile_);
 			}
 
 				
@@ -76,6 +76,8 @@ namespace gossip_loccs
 			Object* o = (Object*) retjval;
 			if ( filter.object_should_be_traced(o) )
 				record_obj(o);
+			else
+				fprintf(traceFile_, "\n");
 		}
 		else
 		{
@@ -83,6 +85,10 @@ namespace gossip_loccs
 			m.s = retjval;
 			record_normal( shortyName[0], m.u, BASIC_TYPE );
 		}
+
+		className.clear();
+		methodName.clear();
+		shortyName.clear();
 			
 		//fprintf(traceFile_, "\n" );
 		fflush(traceFile_);
@@ -91,19 +97,24 @@ namespace gossip_loccs
 	void PaReTracer::record_temp_info ( const Method * const m, s8& rj )
 	{
 		retjval = rj;
+		className = m->clazz->descriptor;
+		methodName = m->name;
+		shortyName = m->shorty;
+		/*
 		snprintf( className, ClassNameMaxLen, "%s", m->clazz->descriptor );
 		snprintf( methodName, MethodNameMaxLen, "%s", m->name );
 		snprintf( shortyName, ShortyNameMaxLen, "%s", m->shorty );
+		*/
 
 	}
 
-	char* PaReTracer::get_className()
+	const char* PaReTracer::get_className()
 	{
-		return className;
+		return className.c_str();
 	}
 
-	char* PaReTracer::get_methodName()
+	const char* PaReTracer::get_methodName()
 	{
-		return methodName;
+		return methodName.c_str();
 	}
 }
