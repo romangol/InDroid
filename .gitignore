@@ -1,4 +1,0 @@
-mterp/out/*.S
-mterp/out
-mterp/out/*.cpp
-.gitignore

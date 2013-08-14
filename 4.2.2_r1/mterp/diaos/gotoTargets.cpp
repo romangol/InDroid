@@ -582,7 +582,7 @@ GOTO_TARGET(returnFromMethod)
 
 #if defined(LOCCS_DIAOS)
         // be sure the method is called by traced class
-        diaos_monitor_retval();
+        diaos_monitor_retval(curMethod);
 #endif
 
         /* use FINISH on the caller's invoke instruction */
@@ -827,7 +827,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
         }
 #if defined(LOCCS_DIAOS)
-        diaos_monitor_func_call( methodToCall );
+        diaos_monitor_func_call( curMethod, methodToCall );
         diaos_monitor_parameter( methodToCall, outs );
 #endif
     }
